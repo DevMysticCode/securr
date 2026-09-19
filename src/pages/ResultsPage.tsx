@@ -50,7 +50,7 @@ function RequirementsBar({ req }: { req: Requirements }) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2">
       {chips.map((c) => <span key={c} className="rounded-full border border-navy-100 bg-navy-50 px-3 py-1 text-xs font-medium text-navy-700">{c}</span>)}
-      <Link to="/search" className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline"><Pencil size={12} /> Edit</Link>
+      <Link to="/search" className="inline-flex items-center gap-1 px-1 py-2.5 text-xs font-medium text-brand-700 hover:underline"><Pencil size={12} /> Edit</Link>
     </div>
   );
 }

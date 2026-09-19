@@ -35,19 +35,20 @@ export default function ComparePage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <BackLink to="/plans">Back to plans</BackLink>
-      <div className="mt-4 flex items-end justify-between">
+      <div className="mt-4 flex items-end justify-between gap-2">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Compare plans</h1>
           <p className="mt-1 text-sm text-navy-500">Only fields supplied by the data source are shown. Illustrative, not live quotes.</p>
         </div>
-        <button onClick={() => { clearCompare(); nav("/plans"); }} className="text-sm font-medium text-brand-700 hover:underline">Clear all</button>
+        <button onClick={() => { clearCompare(); nav("/plans"); }} className="shrink-0 whitespace-nowrap py-2.5 pl-3 text-sm font-medium text-brand-700 hover:underline">Clear all</button>
       </div>
 
-      <div className="card mt-6 overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+      <p className="mt-4 text-xs text-navy-500 sm:hidden">Swipe sideways to see every plan →</p>
+      <div className="card mt-2 overflow-x-auto sm:mt-6">
+        <table className="w-full min-w-[600px] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-navy-100 align-top">
-              <th className="sticky left-0 w-40 bg-white p-4 text-xs font-semibold uppercase tracking-wide text-navy-500">Feature</th>
+              <th className="sticky left-0 w-28 bg-white p-3 text-xs sm:w-40 sm:p-4 font-semibold uppercase tracking-wide text-navy-500">Feature</th>
               {plans.map((p) => (
                 <th key={p!.id} className="p-4 font-normal">
                   <div className="flex items-start justify-between gap-2">
@@ -58,7 +59,7 @@ export default function ComparePage() {
                         <Link to={`/plans/${encodeURIComponent(p!.id)}`} className="text-base font-bold text-navy-900 hover:text-brand-700">{p!.name}</Link>
                       </div>
                     </div>
-                    <button onClick={() => remove(p!.id)} aria-label={`Remove ${p!.name}`} className="rounded p-1 text-navy-300 hover:bg-navy-50 hover:text-navy-700"><X size={16} /></button>
+                    <button onClick={() => remove(p!.id)} aria-label={`Remove ${p!.name}`} className="-m-1 rounded p-2.5 text-navy-300 hover:bg-navy-50 hover:text-navy-700"><X size={16} /></button>
                   </div>
                 </th>
               ))}
@@ -67,13 +68,13 @@ export default function ComparePage() {
           <tbody>
             {rows.filter((r) => r.f.key !== "insurer").map(({ f, vals }) => (
               <tr key={f.key} className="border-b border-navy-50 align-top last:border-0">
-                <th scope="row" className="sticky left-0 bg-white p-4 text-xs font-semibold uppercase tracking-wide text-navy-500">{f.label}</th>
+                <th scope="row" className="sticky left-0 bg-white p-3 text-[11px] font-semibold uppercase tracking-wide text-navy-500 sm:p-4 sm:text-xs">{f.label}</th>
                 {vals.map((v, i) => <td key={i} className="p-4 font-medium">{v ?? <span className="text-xs italic text-navy-300">Not provided</span>}</td>)}
               </tr>
             ))}
             {featureRow && (
               <tr className="align-top">
-                <th scope="row" className="sticky left-0 bg-white p-4 text-xs font-semibold uppercase tracking-wide text-navy-500">Highlights</th>
+                <th scope="row" className="sticky left-0 bg-white p-3 text-[11px] font-semibold uppercase tracking-wide text-navy-500 sm:p-4 sm:text-xs">Highlights</th>
                 {plans.map((p) => (
                   <td key={p!.id} className="p-4">
                     {p!.features.length ? <ul className="list-inside list-disc space-y-1 marker:text-brand-500">{p!.features.map((f) => <li key={f}>{f}</li>)}</ul> : <span className="text-xs italic text-navy-300">Not provided</span>}

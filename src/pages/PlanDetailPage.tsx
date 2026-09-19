@@ -98,7 +98,7 @@ export default function PlanDetailPage() {
               {extra.map(([k, v]) => <div key={k}><dt className="text-xs font-medium uppercase tracking-wide text-navy-500">{titleCase(k.replace(/([A-Z])/g, " $1").toLowerCase())}</dt><dd className="mt-0.5 break-words text-sm font-semibold">{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd></div>)}
             </dl>
           )}
-          {plan.sourceUrl && <a href={plan.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline">Insurer’s product page <ExternalLink size={14} /></a>}
+          {plan.sourceUrl && <a href={plan.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 py-2.5 text-sm font-medium text-brand-700 hover:underline">Insurer’s product page <ExternalLink size={14} /></a>}
           <p className="mt-4 rounded-xl bg-navy-50 p-3.5 text-xs leading-relaxed text-navy-600">Demo data. Premiums are illustrative and not a live quote. Verify all details with the insurer before making a decision.</p>
         </Section>
       </div>

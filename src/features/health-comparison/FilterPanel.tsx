@@ -21,7 +21,7 @@ export default function FilterPanel({ facets, filters, onChange, onReset }: {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-base font-bold">Filters</h2>
-        <button onClick={onReset} className="text-sm font-medium text-brand-700 hover:underline">Reset</button>
+        <button onClick={onReset} className="-my-2 px-1 py-2.5 text-sm font-medium text-brand-700 hover:underline">Reset</button>
       </div>
 
       {facets.types.length > 1 && (

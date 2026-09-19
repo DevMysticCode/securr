@@ -76,5 +76,5 @@ export function InsurerAvatar({ name, logoUrl, size = 44 }: { name: string; logo
 }
 
 export function BackLink({ to, children }: { to: string; children: ReactNode }) {
-  return <Link to={to} className="text-sm font-medium text-brand-700 hover:underline">← {children}</Link>;
+  return <Link to={to} className="inline-block py-2.5 text-sm font-medium text-brand-700 hover:underline">← {children}</Link>;
 }

@@ -32,19 +32,19 @@ export default function Layout() {
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-1 lg:flex">
             {nav.map((n) => (
               <NavLink key={n.to} to={n.to} className={({ isActive }) => `rounded-lg px-3.5 py-2 text-sm font-medium transition ${isActive ? "bg-brand-50 text-brand-700" : "text-navy-700 hover:bg-navy-50"}`}>{n.label}</NavLink>
             ))}
-            <Link to="/search" className="btn-primary ml-3 !py-2">Compare Health Plans</Link>
+            <Link to="/search" className="btn-primary ml-3 whitespace-nowrap !py-2">Compare Health Plans</Link>
           </nav>
 
-          <button className="rounded-lg p-2 text-navy-800 hover:bg-navy-50 md:hidden" onClick={() => setOpen((o) => !o)} aria-label="Toggle menu" aria-expanded={open}>
+          <button className="rounded-lg p-2 text-navy-800 hover:bg-navy-50 lg:hidden" onClick={() => setOpen((o) => !o)} aria-label="Toggle menu" aria-expanded={open}>
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
         {open && (
-          <nav className="border-t border-navy-100 bg-white px-4 py-3 md:hidden">
+          <nav className="border-t border-navy-100 bg-white px-4 py-3 lg:hidden">
             {nav.map((n) => <NavLink key={n.to} to={n.to} className="block rounded-lg px-3 py-3 text-sm font-medium text-navy-800 hover:bg-navy-50">{n.label}</NavLink>)}
             <Link to="/search" className="btn-primary mt-2 w-full">Compare Health Plans</Link>
           </nav>
@@ -60,10 +60,10 @@ export default function Layout() {
               <p className="text-lg font-bold text-white">{brand.fullName}</p>
               <p className="mt-1 text-sm text-navy-300">Health insurance comparison — demo build.</p>
             </div>
-            <div className="flex gap-8 text-sm">
-              <Link to="/search" className="hover:text-white">Compare plans</Link>
-              <Link to="/insurers" className="hover:text-white">Insurers</Link>
-              <Link to="/debug/api" className="hover:text-white">API status</Link>
+            <div className="flex flex-wrap gap-x-8 text-sm">
+              <Link to="/search" className="py-2.5 hover:text-white">Compare plans</Link>
+              <Link to="/insurers" className="py-2.5 hover:text-white">Insurers</Link>
+              <Link to="/debug/api" className="py-2.5 hover:text-white">API status</Link>
             </div>
           </div>
           <p className="mt-8 border-t border-navy-700 pt-6 text-xs leading-relaxed text-navy-300">
