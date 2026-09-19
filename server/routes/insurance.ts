@@ -1,8 +1,8 @@
-import { Router, type Response } from "express";
+import { Router, type Request, type Response } from "express";
 import type { InsuranceProvider } from "../providers/InsuranceProvider.js";
-import { toErrorResponse } from "../handlers.js";
+import { badCategory, insurersPayload, parseCategory, plansPayload, toErrorResponse } from "../handlers.js";
 import { TtlCache } from "../cache.js";
-import type { HealthPlansResponse, InsurersResponse } from "../../shared/types.js";
+import type { InsuranceCategory, InsurersResponse, PlansResponse } from "../../shared/types.js";
 
 function sendError(res: Response, e: unknown) {
   const { status, body } = toErrorResponse(e);
@@ -11,35 +11,42 @@ function sendError(res: Response, e: unknown) {
 
 export function insuranceRouter(provider: InsuranceProvider, ttlMs: number) {
   const r = Router();
-  const plansCache = new TtlCache<HealthPlansResponse["plans"]>(ttlMs);
-  const insurersCache = new TtlCache<InsurersResponse["insurers"]>(ttlMs);
+  const plansCache = new Map<InsuranceCategory, TtlCache<PlansResponse>>();
+  const insurersCache = new TtlCache<InsurersResponse>(ttlMs);
 
-  async function cached<T>(cache: TtlCache<T[]>, load: () => Promise<T[]>) {
+  /** Serves a cached payload (marking it as cached) or loads a fresh one. Errors are never cached. */
+  async function cached<T extends { meta: { cached: boolean; fetchedAt: string; durationMs: number } }>(cache: TtlCache<T>, load: () => Promise<T>): Promise<T> {
     const hit = cache.get();
-    if (hit) {
-      return { items: hit.value, meta: { provider: provider.name, fetchedAt: new Date(hit.storedAt).toISOString(), durationMs: 0, cached: true } };
-    }
-    const t0 = performance.now();
-    const items = await load();
-    cache.set(items);
-    return { items, meta: { provider: provider.name, fetchedAt: new Date().toISOString(), durationMs: Math.round(performance.now() - t0), cached: false } };
+    if (hit) return { ...hit.value, meta: { ...hit.value.meta, cached: true, durationMs: 0 } };
+    const fresh = await load();
+    cache.set(fresh);
+    return fresh;
   }
 
-  r.get("/insurance/health-plans", async (_req, res) => {
+  async function plans(category: InsuranceCategory, res: Response) {
     try {
-      const { items, meta } = await cached(plansCache, () => provider.getHealthPlans());
-      res.json({ plans: items, total: items.length, meta } satisfies HealthPlansResponse);
+      if (!plansCache.has(category)) plansCache.set(category, new TtlCache<PlansResponse>(ttlMs));
+      res.json(await cached(plansCache.get(category)!, () => plansPayload(provider, category)));
     } catch (e) { sendError(res, e); }
+  }
+
+  // Generic endpoint plus the original health-specific alias.
+  r.get("/insurance/plans", (req: Request, res) => {
+    const category = parseCategory(String(req.query.category ?? ""));
+    if (!category) { const b = badCategory(); return void res.status(b.status).json(b.body); }
+    return plans(category, res);
   });
+  r.get("/insurance/health-plans", (_req, res) => plans("health", res));
 
   r.get("/insurance/insurers", async (_req, res) => {
-    try {
-      const { items, meta } = await cached(insurersCache, () => provider.getHealthInsurers());
-      res.json({ insurers: items, total: items.length, meta } satisfies InsurersResponse);
-    } catch (e) { sendError(res, e); }
+    try { res.json(await cached(insurersCache, () => insurersPayload(provider))); } catch (e) { sendError(res, e); }
   });
 
-  r.get("/debug/health-plans", async (_req, res) => res.json(await provider.diagnose()));
+  r.get("/debug/health-plans", async (req, res) => {
+    const category = parseCategory(String(req.query.category ?? "health"));
+    if (!category) { const b = badCategory(); return void res.status(b.status).json(b.body); }
+    res.json(await provider.diagnose(category));
+  });
 
   return r;
 }

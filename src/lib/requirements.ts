@@ -28,5 +28,3 @@ export function toSearchParams(r: Requirements) {
   for (const [k, v] of Object.entries(r)) if (v != null && v !== "") p.set(k, String(v));
   return p;
 }
-
-export const COVERAGE_CHOICES = [300000, 500000, 1000000, 1500000, 2000000, 2500000, 5000000, 10000000];

@@ -1,4 +1,4 @@
-import type { HealthPlan, Insurer, DebugReport } from "../../shared/types.js";
+import type { InsuranceCategory, InsurancePlan, Insurer, DebugReport } from "../../shared/types.js";
 import { ProviderError, type InsuranceProvider } from "./InsuranceProvider.js";
 
 const KNOWN_KEYS = new Set([
@@ -51,34 +51,31 @@ export class WorldBestInsurerProvider implements InsuranceProvider {
     }
   }
 
-  private async fetchProducts() {
-    const r = await this.fetchJson("products", { country: "in", category: "health", limit: "200" });
+  private async fetchProducts(category: InsuranceCategory) {
+    const r = await this.fetchJson("products", { country: "in", category, limit: "200" });
     if (!Array.isArray(r.json?.products)) throw new ProviderError("BAD_RESPONSE", "Response has no products array", r.status);
     return r;
   }
 
-  async getHealthPlans(): Promise<HealthPlan[]> {
-    return (await this.fetchProducts()).json.products.map(normalizePlan);
+  async getPlans(category: InsuranceCategory): Promise<InsurancePlan[]> {
+    return (await this.fetchProducts(category)).json.products.map(normalizePlan);
   }
 
-  async getHealthInsurers(): Promise<Insurer[]> {
+  async getInsurers(): Promise<Insurer[]> {
     const r = await this.fetchJson("insurers", { country: "in", limit: "200" });
     if (!Array.isArray(r.json?.insurers)) throw new ProviderError("BAD_RESPONSE", "Response has no insurers array", r.status);
-    // Only insurers that actually sell health products in the catalogue.
-    return (r.json.insurers as Raw[])
-      .filter((i) => Array.isArray(i.categories) && i.categories.includes("health"))
-      .map(normalizeInsurer);
+    return (r.json.insurers as Raw[]).map(normalizeInsurer);
   }
 
-  async diagnose(): Promise<DebugReport> {
+  async diagnose(category: InsuranceCategory): Promise<DebugReport> {
     const requestedAt = new Date().toISOString();
     const t0 = performance.now();
     const base = {
-      provider: this.name, requestedAt,
-      upstreamUrl: this.url("products", { country: "in", category: "health", limit: "200" }, true),
+      provider: this.name, requestedAt, category,
+      upstreamUrl: this.url("products", { country: "in", category, limit: "200" }, true),
     };
     try {
-      const r = await this.fetchProducts();
+      const r = await this.fetchProducts(category);
       return { ...base, ok: true, durationMs: Math.round(performance.now() - t0), httpStatus: r.status, planCount: r.json.products.length, raw: r.json };
     } catch (e) {
       const err = e instanceof ProviderError ? e : new ProviderError("NETWORK", String(e));
@@ -108,11 +105,12 @@ function diagnosisFor(e: ProviderError): string {
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
 const str = (v: unknown) => (typeof v === "string" && v.trim() ? v : undefined);
 
-function normalizePlan(p: Raw): HealthPlan {
+function normalizePlan(p: Raw): InsurancePlan {
   const additional: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(p)) if (!KNOWN_KEYS.has(k) && v != null) additional[k] = v;
   return {
     id: String(p.id),
+    category: p.category,
     name: str(p.productName) ?? String(p.id),
     insurerName: str(p.insurerName) ?? "Unknown insurer",
     insurerSlug: str(p.insurerSlug),
@@ -122,7 +120,7 @@ function normalizePlan(p: Raw): HealthPlan {
       assumptions: str(p.premiumRange.assumptions), verified: p.premiumRange.isVerified,
     },
     sumInsured: p.sumInsured && {
-      min: num(p.sumInsured.min), max: num(p.sumInsured.max),
+      min: num(p.sumInsured.min), max: num(p.sumInsured.max), currency: str(p.sumInsured.currency),
       options: Array.isArray(p.sumInsured.options) ? p.sumInsured.options.filter((n: unknown) => typeof n === "number") : undefined,
     },
     eligibility: p.eligibility && {
@@ -142,6 +140,7 @@ function normalizeInsurer(i: Raw): Insurer {
   const csr = i.claimSettlementRatio;
   return {
     slug: String(i.slug), name: str(i.name) ?? String(i.slug), shortName: str(i.shortName), type: str(i.type),
+    categories: Array.isArray(i.categories) ? i.categories.filter((c: unknown) => typeof c === "string") : [],
     headquarters: str(i.headquarters), established: num(i.established),
     claimSettlementRatio: csr && num(csr.value) != null ? { value: csr.value, year: str(csr.year), verified: csr.verified } : undefined,
     networkHospitals: num(i.networkHospitals),

@@ -1,26 +1,30 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Pencil, SlidersHorizontal, X } from "lucide-react";
-import type { HealthPlan } from "../../shared/types";
+import type { InsurancePlan } from "../../shared/types";
 import { EmptyState, ErrorState, PlanCardSkeleton } from "../components/ui";
-import { inrShort } from "../lib/format";
+import type { CategoryConfig } from "../config/categories";
+import { moneyShort } from "../lib/format";
+import { coverCurrency } from "../lib/planFields";
 import { parseRequirements, type Requirements } from "../lib/requirements";
-import FilterPanel from "../features/health-comparison/FilterPanel";
-import PlanCard from "../features/health-comparison/PlanCard";
-import { MAX_COMPARE, usePlans } from "../features/health-comparison/PlansContext";
+import { useCategory } from "../features/comparison/CategoryRoute";
+import FilterPanel from "../features/comparison/FilterPanel";
+import PlanCard from "../features/comparison/PlanCard";
+import { MAX_COMPARE, useCategoryPlans } from "../features/comparison/PlansContext";
 import {
   applyFilters, availableSorts, deriveFacets, initialFilters, SORT_LABELS, sortPlans, type SortKey,
-} from "../features/health-comparison/filtering";
+} from "../features/comparison/filtering";
 
 export default function ResultsPage() {
-  const { state, reload } = usePlans();
+  const cfg = useCategory();
+  const { state, reload } = useCategoryPlans(cfg.slug);
   const [params] = useSearchParams();
   const req = useMemo(() => parseRequirements(params), [params]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-      <h1 className="text-3xl font-bold tracking-tight">Health Insurance Plans</h1>
-      {state.status === "loading" && (
+      <h1 className="text-3xl font-bold tracking-tight">{cfg.title}</h1>
+      {(state.status === "loading" || state.status === "idle") && (
         <>
           <p className="mt-1 text-navy-500">Loading plans…</p>
           <div className="mt-8 space-y-5" role="status" aria-label="Loading plans">
@@ -31,33 +35,33 @@ export default function ResultsPage() {
       {state.status === "error" && <div className="mt-10"><ErrorState error={state.error} onRetry={reload} /></div>}
       {state.status === "ready" && (
         state.plans.length === 0
-          ? <div className="mt-8"><EmptyState title="No health plans are available right now" hint="The data source returned an empty catalogue. Please try again later." action={<button onClick={reload} className="btn-secondary">Retry</button>} /></div>
-          : <ResultsBody plans={state.plans} req={req} />
+          ? <div className="mt-8"><EmptyState title="No plans are available right now" hint="The data source returned an empty catalogue. Please try again later." action={<button onClick={reload} className="btn-secondary">Retry</button>} /></div>
+          : <ResultsBody key={cfg.slug} cfg={cfg} plans={state.plans} req={req} />
       )}
     </div>
   );
 }
 
-function RequirementsBar({ req }: { req: Requirements }) {
+function RequirementsBar({ cfg, req }: { cfg: CategoryConfig; req: Requirements }) {
   const chips = [
     req.age != null && `Age ${req.age}`,
     req.members != null && `${req.members} member${req.members > 1 ? "s" : ""}`,
     req.city,
-    req.coverage != null && `${inrShort(req.coverage)} cover`,
+    req.coverage != null && `${moneyShort(req.coverage, cfg.form.coverage?.currency)} cover`,
     req.renewal && (req.renewal === "renewal" ? "Existing policy / renewal" : "New policy"),
   ].filter(Boolean) as string[];
   if (!chips.length) return null;
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2">
       {chips.map((c) => <span key={c} className="rounded-full border border-navy-100 bg-navy-50 px-3 py-1 text-xs font-medium text-navy-700">{c}</span>)}
-      <Link to="/search" className="inline-flex items-center gap-1 px-1 py-2.5 text-xs font-medium text-brand-700 hover:underline"><Pencil size={12} /> Edit</Link>
+      <Link to={`/${cfg.slug}/search`} className="inline-flex items-center gap-1 px-1 py-2.5 text-xs font-medium text-brand-700 hover:underline"><Pencil size={12} /> Edit</Link>
     </div>
   );
 }
 
-function ResultsBody({ plans, req }: { plans: HealthPlan[]; req: Requirements }) {
+function ResultsBody({ cfg, plans, req }: { cfg: CategoryConfig; plans: InsurancePlan[]; req: Requirements }) {
   const nav = useNavigate();
-  const { compareIds, toggleCompare, clearCompare } = usePlans();
+  const { compareIds, toggleCompare, clearCompare } = useCategoryPlans(cfg.slug);
   const facets = useMemo(() => deriveFacets(plans), [plans]);
   const [filters, setFilters] = useState(() => initialFilters(req, facets));
   const [sort, setSort] = useState<SortKey>("recommended");
@@ -67,7 +71,8 @@ function ResultsBody({ plans, req }: { plans: HealthPlan[]; req: Requirements })
   const visible = useMemo(() => sortPlans(applyFilters(plans, filters), sort), [plans, filters, sort]);
   const reset = () => setFilters({ insurers: [], types: [] });
   const filtered = visible.length !== plans.length;
-  const panel = <FilterPanel facets={facets} filters={filters} onChange={setFilters} onReset={reset} />;
+  const currency = coverCurrency(plans.find((p) => p.sumInsured?.options?.length) ?? plans[0]!);
+  const panel = <FilterPanel facets={facets} filters={filters} onChange={setFilters} onReset={reset} coverLabel={cfg.coverFilterLabel} coverCurrency={currency} />;
 
   return (
     <>
@@ -75,7 +80,8 @@ function ResultsBody({ plans, req }: { plans: HealthPlan[]; req: Requirements })
         <strong className="text-navy-900">{visible.length} plan{visible.length === 1 ? "" : "s"} available</strong>
         {filtered && ` (of ${plans.length})`} · illustrative ranges, not live quotes
       </p>
-      <RequirementsBar req={req} />
+      <p className="mt-1 text-xs text-navy-500">Premiums shown in INR (the data source does not state a premium currency; India catalogue).{cfg.note && ` ${cfg.note}`}</p>
+      <RequirementsBar cfg={cfg} req={req} />
       {req.members && req.members > 1 && filters.types.includes("family-floater") && (
         <p className="mt-3 text-xs text-navy-500">Family floater plans are pre-selected for {req.members} members. Adjust under “Plan type”.</p>
       )}
@@ -126,7 +132,7 @@ function ResultsBody({ plans, req }: { plans: HealthPlan[]; req: Requirements })
             <p className="text-sm"><strong>{compareIds.length}</strong> of {MAX_COMPARE} selected{compareIds.length < 2 && <span className="hidden text-navy-500 sm:inline"> — pick at least 2 to compare</span>}</p>
             <div className="flex gap-2">
               <button onClick={clearCompare} className="btn-secondary !py-2">Clear</button>
-              <button disabled={compareIds.length < 2} onClick={() => nav(`/compare?ids=${compareIds.map(encodeURIComponent).join(",")}`)} className="btn-primary !py-2">Compare</button>
+              <button disabled={compareIds.length < 2} onClick={() => nav(`/${cfg.slug}/compare?ids=${compareIds.map(encodeURIComponent).join(",")}`)} className="btn-primary !py-2">Compare</button>
             </div>
           </div>
         </div>

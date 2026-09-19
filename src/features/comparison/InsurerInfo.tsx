@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import type { HealthPlan, Insurer } from "../../../shared/types";
+import type { InsurancePlan, Insurer } from "../../../shared/types";
 import { InsurerAvatar } from "../../components/ui";
 import { titleCase } from "../../lib/format";
 
 /** Insurer facts exactly as the provider returns them; missing fields simply don't render. */
-export default function InsurerInfo({ insurer, plans, currentPlanId }: { insurer: Insurer; plans: HealthPlan[]; currentPlanId?: string }) {
+export default function InsurerInfo({ insurer, plans, currentPlanId }: { insurer: Insurer; plans: InsurancePlan[]; currentPlanId?: string }) {
   const facts: [string, string | undefined][] = [
     ["Type", insurer.type ? titleCase(insurer.type) : undefined],
     ["Headquarters", insurer.headquarters],
@@ -30,9 +30,9 @@ export default function InsurerInfo({ insurer, plans, currentPlanId }: { insurer
       </dl>
       {others.length > 0 && (
         <div className="mt-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-navy-500">{currentPlanId ? "Other health products" : "Health products"}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-navy-500">{currentPlanId ? "Other products from this insurer" : "Products"}</p>
           <ul className="mt-2 flex flex-wrap gap-2">
-            {others.map((p) => <li key={p.id}><Link to={`/plans/${encodeURIComponent(p.id)}`} className="rounded-full border border-navy-100 px-3 py-1 text-xs font-medium text-navy-700 hover:border-brand-500 hover:text-brand-700">{p.name}</Link></li>)}
+            {others.map((p) => <li key={p.id}><Link to={`/${p.category}/plans/${encodeURIComponent(p.id)}`} className="rounded-full border border-navy-100 px-3 py-1 text-xs font-medium text-navy-700 hover:border-brand-500 hover:text-brand-700">{p.name}{!currentPlanId && <span className="text-navy-300"> · {titleCase(p.category)}</span>}</Link></li>)}
           </ul>
         </div>
       )}

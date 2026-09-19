@@ -11,7 +11,7 @@ const provider = createProvider();
 
 app.disable("x-powered-by");
 app.get("/api/health", (_req, res) => res.json({ status: "ok", provider: provider.name }));
-app.use("/api", insuranceRouter(provider, Number(process.env.CACHE_TTL_SECONDS ?? 600) * 1000));
+app.use("/api", insuranceRouter(provider, Number(process.env.CACHE_TTL_SECONDS ?? 3600) * 1000));
 app.use("/api", (_req, res) => res.status(404).json({ error: { code: "INTERNAL", message: "Not found" } }));
 
 // Production: serve the built SPA from the same origin.

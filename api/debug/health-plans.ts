@@ -1,3 +1,3 @@
-import { serverlessJson } from "../../server/handlers.js";
+import { serverlessCategory } from "../../server/handlers.js";
 
-export const GET = () => serverlessJson((p) => p.diagnose(), false);
+export const GET = (req: Request) => serverlessCategory(req, "health", (p, c) => p.diagnose(c), false);

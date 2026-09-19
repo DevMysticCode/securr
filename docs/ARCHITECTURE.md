@@ -12,7 +12,7 @@ Browser -> React frontend (src/) -> Our backend (server/) -> Provider (World Bes
   `shared/types.ts`, so it does not change.
 * Every field in the model is optional. The UI renders only what a provider returns and says
   "Not provided" otherwise; filters/sorts/compare rows are derived from the data actually present.
-* Backend caches successful responses for `CACHE_TTL_SECONDS` (default 600) because the demo key allows
+* Backend caches successful responses for `CACHE_TTL_SECONDS` (default 3600; 6h at the Vercel edge) because the demo key allows
   100 requests/day. Errors are never cached and never replaced by fallback data.
 
 ## Growing into the full platform
@@ -20,7 +20,7 @@ Browser -> React frontend (src/) -> Our backend (server/) -> Provider (World Bes
 | Area | Where it goes |
 | --- | --- |
 | Public website | `src/pages`, `src/app/Layout.tsx` (exists) |
-| Insurance comparison | `src/features/health-comparison` (exists); add `term-life`, `motor`... as sibling features |
+| Insurance comparison | `src/features/comparison` (exists, serves health, term-life, motor and travel via `src/config/categories.ts`) |
 | Customer / Partner / Employee / Admin portals | Sibling route trees in `src/app/App.tsx` with their own layouts + auth guards |
 | CRM, Quotes, Applications, Policies, Renewals, Claims, Commissions | One folder each under `src/features/*` and `server/routes/*`, backed by a database; extend `InsuranceProvider` with `getQuotes`, etc. |
 | Branding | `src/config/brand.ts` (name/copy) and colour tokens in `src/index.css` |

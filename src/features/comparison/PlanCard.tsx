@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
-import type { HealthPlan } from "../../../shared/types";
+import type { InsurancePlan } from "../../../shared/types";
 import { Badge, InsurerAvatar } from "../../components/ui";
-import { inr, inrShort, rangeOf, titleCase } from "../../lib/format";
+import { money, moneyShort, PREMIUM_CURRENCY, rangeOf, titleCase } from "../../lib/format";
+import { coverCurrency } from "../../lib/planFields";
 import { MAX_COMPARE } from "./PlansContext";
 
 function Fact({ label, value }: { label: string; value?: string }) {
@@ -16,9 +17,9 @@ function Fact({ label, value }: { label: string; value?: string }) {
 }
 
 export default function PlanCard({ plan, selected, onToggle, compareFull }: {
-  plan: HealthPlan; selected: boolean; onToggle: () => void; compareFull: boolean;
+  plan: InsurancePlan; selected: boolean; onToggle: () => void; compareFull: boolean;
 }) {
-  const premium = rangeOf(plan.premium?.min, plan.premium?.max, inr);
+  const premium = rangeOf(plan.premium?.min, plan.premium?.max, (n) => money(n, PREMIUM_CURRENCY));
   const age = rangeOf(plan.eligibility?.minAge, plan.eligibility?.maxAge, String);
   const shown = plan.features.slice(0, 4);
   const disabled = !selected && compareFull;
@@ -36,7 +37,7 @@ export default function PlanCard({ plan, selected, onToggle, compareFull }: {
           </div>
 
           <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-            <Fact label="Sum insured" value={rangeOf(plan.sumInsured?.min, plan.sumInsured?.max, inrShort)} />
+            <Fact label="Sum insured" value={rangeOf(plan.sumInsured?.min, plan.sumInsured?.max, (n) => moneyShort(n, coverCurrency(plan)))} />
             <Fact label="Hospitals" value={plan.networkHospitals?.count?.toLocaleString("en-IN")} />
             <Fact label="Entry age" value={age && `${age} yrs`} />
             <Fact label="Renewability" value={plan.renewability} />
@@ -71,7 +72,7 @@ export default function PlanCard({ plan, selected, onToggle, compareFull }: {
             )}
           </div>
           <div className="space-y-3">
-            <Link to={`/plans/${encodeURIComponent(plan.id)}`} className="btn-primary w-full">View Plan <ArrowRight size={16} /></Link>
+            <Link to={`/${plan.category}/plans/${encodeURIComponent(plan.id)}`} className="btn-primary w-full">View Plan <ArrowRight size={16} /></Link>
             <label className={`flex items-center gap-2 text-sm ${disabled ? "cursor-not-allowed text-navy-300" : "cursor-pointer text-navy-700"}`}>
               <input type="checkbox" className="h-4 w-4 accent-brand-500" checked={selected} disabled={disabled} onChange={onToggle} />
               {disabled ? `Compare (max ${MAX_COMPARE})` : "Add to compare"}

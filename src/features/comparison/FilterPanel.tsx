@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { inr, inrShort, titleCase } from "../../lib/format";
+import { money, moneyShort, PREMIUM_CURRENCY, titleCase } from "../../lib/format";
 import type { Facets, Filters } from "./filtering";
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
@@ -13,8 +13,8 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 
 const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
-export default function FilterPanel({ facets, filters, onChange, onReset }: {
-  facets: Facets; filters: Filters; onChange: (f: Filters) => void; onReset: () => void;
+export default function FilterPanel({ facets, filters, onChange, onReset, coverLabel, coverCurrency }: {
+  facets: Facets; filters: Filters; onChange: (f: Filters) => void; onReset: () => void; coverLabel: string; coverCurrency: string;
 }) {
   const pb = facets.premiumBounds;
   return (
@@ -45,16 +45,16 @@ export default function FilterPanel({ facets, filters, onChange, onReset }: {
             min={pb.min} max={pb.max} step={500} value={filters.maxPremium ?? pb.max}
             onChange={(e) => onChange({ ...filters, maxPremium: +e.target.value >= pb.max ? undefined : +e.target.value })}
           />
-          <p className="mt-1 text-sm text-navy-700">Up to <strong>{inr(filters.maxPremium ?? pb.max)}</strong></p>
+          <p className="mt-1 text-sm text-navy-700">Up to <strong>{money(filters.maxPremium ?? pb.max, PREMIUM_CURRENCY)}</strong></p>
         </Group>
       )}
 
       {facets.coverOptions.length > 0 && (
-        <Group title="Sum insured offered">
+        <Group title={coverLabel}>
           <select className="input" value={filters.cover ?? ""} onChange={(e) => onChange({ ...filters, cover: e.target.value ? +e.target.value : undefined })}>
             <option value="">Any</option>
-            {facets.coverOptions.map((c) => <option key={c} value={c}>{inrShort(c)}</option>)}
-            {filters.cover != null && !facets.coverOptions.includes(filters.cover) && <option value={filters.cover}>{inrShort(filters.cover)}</option>}
+            {facets.coverOptions.map((c) => <option key={c} value={c}>{moneyShort(c, coverCurrency)}</option>)}
+            {filters.cover != null && !facets.coverOptions.includes(filters.cover) && <option value={filters.cover}>{moneyShort(filters.cover, coverCurrency)}</option>}
           </select>
         </Group>
       )}

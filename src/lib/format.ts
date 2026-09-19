@@ -7,6 +7,20 @@ export function inrShort(n: number) {
   return inr(n);
 }
 
+/** Premiums: the India catalogue does not state a premium currency; INR is assumed (see category notes). */
+export const PREMIUM_CURRENCY = "INR";
+
+/** Full amount in a currency, e.g. ₹1,00,000 or $50,000. */
+export function money(n: number, currency = "INR") {
+  if (currency === "INR") return inr(n);
+  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
+}
+
+/** Compact amount: ₹5 L / ₹1 Cr for INR, otherwise the full localised amount. */
+export function moneyShort(n: number, currency = "INR") {
+  return currency === "INR" ? inrShort(n) : money(n, currency);
+}
+
 export function rangeOf(min: number | undefined, max: number | undefined, f: (n: number) => string) {
   if (min != null && max != null) return min === max ? f(min) : `${f(min)} – ${f(max)}`;
   if (min != null) return `From ${f(min)}`;

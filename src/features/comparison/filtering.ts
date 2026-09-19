@@ -1,4 +1,4 @@
-import type { HealthPlan } from "../../../shared/types";
+import type { InsurancePlan } from "../../../shared/types";
 import type { Requirements } from "../../lib/requirements";
 
 export interface Filters {
@@ -10,7 +10,7 @@ export interface Filters {
 }
 
 /** Facets are derived from the data, so a filter only exists if the API supplied the underlying field. */
-export function deriveFacets(plans: HealthPlan[]) {
+export function deriveFacets(plans: InsurancePlan[]) {
   const count = (vals: (string | undefined)[]) => {
     const m = new Map<string, number>();
     vals.forEach((v) => v && m.set(v, (m.get(v) ?? 0) + 1));
@@ -37,7 +37,7 @@ export function initialFilters(req: Requirements, facets: Facets): Filters {
   };
 }
 
-export function applyFilters(plans: HealthPlan[], f: Filters) {
+export function applyFilters(plans: InsurancePlan[], f: Filters) {
   return plans.filter((p) => {
     if (f.insurers.length && !f.insurers.includes(p.insurerName)) return false;
     if (f.types.length && !(p.planType && f.types.includes(p.planType))) return false;
@@ -65,7 +65,7 @@ export const SORT_LABELS: Record<SortKey, string> = {
 };
 
 /** Returns only the sort options the data can actually support. */
-export function availableSorts(plans: HealthPlan[]): SortKey[] {
+export function availableSorts(plans: InsurancePlan[]): SortKey[] {
   const keys: SortKey[] = ["recommended"];
   if (plans.some((p) => p.premium?.min != null)) keys.push("premium-asc", "premium-desc");
   if (plans.some((p) => p.sumInsured?.max != null)) keys.push("coverage");
@@ -73,9 +73,9 @@ export function availableSorts(plans: HealthPlan[]): SortKey[] {
   return keys;
 }
 
-export function sortPlans(plans: HealthPlan[], key: SortKey) {
+export function sortPlans(plans: InsurancePlan[], key: SortKey) {
   if (key === "recommended") return plans;
-  const byNum = (get: (p: HealthPlan) => number | undefined, dir: 1 | -1) => (a: HealthPlan, b: HealthPlan) => {
+  const byNum = (get: (p: InsurancePlan) => number | undefined, dir: 1 | -1) => (a: InsurancePlan, b: InsurancePlan) => {
     const x = get(a), y = get(b);
     if (x == null && y == null) return 0;
     if (x == null) return 1; // missing values always last

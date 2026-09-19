@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Check, ExternalLink } from "lucide-react";
-import type { HealthPlan } from "../../shared/types";
+import type { InsurancePlan } from "../../shared/types";
 import { BackLink, Badge, EmptyState, ErrorState, InsurerAvatar, NotProvided, Skeleton } from "../components/ui";
 import { titleCase } from "../lib/format";
 import { coverageFields, eligibilityFields, overviewFields, sourceFields, type FieldDef } from "../lib/planFields";
-import InsurerInfo from "../features/health-comparison/InsurerInfo";
-import { useInsurers, usePlans } from "../features/health-comparison/PlansContext";
+import InsurerInfo from "../features/comparison/InsurerInfo";
+import { useCategory } from "../features/comparison/CategoryRoute";
+import { useInsurers, useCategoryPlans } from "../features/comparison/PlansContext";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -17,7 +18,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Fields({ fields, plan }: { fields: FieldDef[]; plan: HealthPlan }) {
+function Fields({ fields, plan }: { fields: FieldDef[]; plan: InsurancePlan }) {
   const rows = fields.map((f) => [f.label, f.value(plan)] as const).filter(([, v]) => v);
   if (!rows.length) return <NotProvided />;
   return (
@@ -29,14 +30,15 @@ function Fields({ fields, plan }: { fields: FieldDef[]; plan: HealthPlan }) {
 
 export default function PlanDetailPage() {
   const { id } = useParams();
-  const { state, reload, compareIds, toggleCompare } = usePlans();
+  const cfg = useCategory();
+  const { state, reload, compareIds, toggleCompare } = useCategoryPlans(cfg.slug);
   const insurers = useInsurers();
 
-  if (state.status === "loading") return <div className="mx-auto max-w-4xl space-y-4 px-4 py-10"><Skeleton className="h-10 w-72" /><Skeleton className="h-48" /><Skeleton className="h-48" /></div>;
+  if (state.status === "loading" || state.status === "idle") return <div className="mx-auto max-w-4xl space-y-4 px-4 py-10"><Skeleton className="h-10 w-72" /><Skeleton className="h-48" /><Skeleton className="h-48" /></div>;
   if (state.status === "error") return <div className="px-4 py-16"><ErrorState error={state.error} onRetry={reload} /></div>;
 
   const plan = state.plans.find((p) => p.id === id);
-  if (!plan) return <div className="mx-auto max-w-2xl px-4 py-16"><EmptyState title="Plan not found" hint="This plan is not in the current catalogue." action={<Link to="/plans" className="btn-secondary">Back to plans</Link>} /></div>;
+  if (!plan) return <div className="mx-auto max-w-2xl px-4 py-16"><EmptyState title="Plan not found" hint="This plan is not in the current catalogue." action={<Link to={`/${cfg.slug}/plans`} className="btn-secondary">Back to plans</Link>} /></div>;
 
   const insurer = insurers.insurers.find((i) => i.slug === plan.insurerSlug);
   const insurerPlans = state.plans.filter((p) => p.insurerName === plan.insurerName);
@@ -44,7 +46,7 @@ export default function PlanDetailPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
-      <BackLink to="/plans">All plans</BackLink>
+      <BackLink to={`/${cfg.slug}/plans`}>All {cfg.label.toLowerCase()} plans</BackLink>
 
       <header className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
@@ -62,7 +64,7 @@ export default function PlanDetailPage() {
           <button onClick={() => toggleCompare(plan.id)} className="btn-secondary" disabled={!compareIds.includes(plan.id) && compareIds.length >= 3}>
             {compareIds.includes(plan.id) ? "Remove from compare" : "Add to compare"}
           </button>
-          <Link to={`/assistance?plan=${encodeURIComponent(plan.id)}`} className="btn-primary">Request assistance</Link>
+          <Link to={`/assistance?category=${plan.category}&plan=${encodeURIComponent(plan.id)}`} className="btn-primary">Request assistance</Link>
         </div>
       </header>
 

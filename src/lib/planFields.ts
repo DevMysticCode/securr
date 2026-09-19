@@ -1,11 +1,14 @@
-import type { HealthPlan } from "../../shared/types";
-import { formatDate, inr, inrShort, rangeOf, titleCase } from "./format";
+import type { InsurancePlan } from "../../shared/types";
+import { formatDate, money, moneyShort, PREMIUM_CURRENCY, rangeOf, titleCase } from "./format";
+
+/** Sum insured currency is only known if the provider states it; otherwise the India catalogue default (INR). */
+export const coverCurrency = (p: InsurancePlan) => p.sumInsured?.currency ?? "INR";
 
 export interface FieldDef {
   key: string;
   label: string;
   /** Returns undefined when the API did not supply the value - callers hide or show "Not provided". */
-  value: (p: HealthPlan) => string | undefined;
+  value: (p: InsurancePlan) => string | undefined;
 }
 
 /**
@@ -15,16 +18,16 @@ export interface FieldDef {
 export const overviewFields: FieldDef[] = [
   { key: "insurer", label: "Insurer", value: (p) => p.insurerName },
   { key: "type", label: "Plan type", value: (p) => (p.planType ? titleCase(p.planType) : undefined) },
-  { key: "premium", label: "Illustrative premium", value: (p) => rangeOf(p.premium?.min, p.premium?.max, inr) },
+  { key: "premium", label: "Illustrative premium", value: (p) => rangeOf(p.premium?.min, p.premium?.max, (n) => money(n, PREMIUM_CURRENCY)) },
   { key: "assumptions", label: "Premium assumptions", value: (p) => p.premium?.assumptions },
   { key: "renewability", label: "Renewability", value: (p) => p.renewability },
 ];
 
 export const coverageFields: FieldDef[] = [
-  { key: "si-range", label: "Sum insured range", value: (p) => rangeOf(p.sumInsured?.min, p.sumInsured?.max, inrShort) },
+  { key: "si-range", label: "Sum insured range", value: (p) => rangeOf(p.sumInsured?.min, p.sumInsured?.max, (n) => moneyShort(n, coverCurrency(p))) },
   {
     key: "si-options", label: "Sum insured options",
-    value: (p) => (p.sumInsured?.options?.length ? p.sumInsured.options.map(inrShort).join(", ") : undefined),
+    value: (p) => (p.sumInsured?.options?.length ? p.sumInsured.options.map((n) => moneyShort(n, coverCurrency(p))).join(", ") : undefined),
   },
   {
     key: "network", label: "Network hospitals",

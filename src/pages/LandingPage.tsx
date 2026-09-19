@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, BookOpen, Check, Info, LayoutList, LifeBuoy, Scale } from "lucide-react";
 import { brand } from "../config/brand";
-import { usePlans } from "../features/health-comparison/PlansContext";
+import { categories, type CategoryConfig } from "../config/categories";
+import { useCategoryPlans } from "../features/comparison/PlansContext";
 import { Skeleton } from "../components/ui";
 
 const pillars = [
@@ -13,8 +14,23 @@ const pillars = [
 
 const comparable = ["Illustrative premium range", "Sum insured options", "Network hospitals", "Entry age & renewability", "Plan highlights"];
 
+function CategoryTile({ cfg }: { cfg: CategoryConfig }) {
+  const { state } = useCategoryPlans(cfg.slug);
+  return (
+    <Link to={`/${cfg.slug}/search`} className="card group flex flex-col p-6 transition hover:border-brand-500 hover:shadow-md">
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><cfg.icon size={22} /></div>
+      <h3 className="font-semibold">{cfg.label} insurance</h3>
+      <p className="mt-2 flex-1 text-sm leading-relaxed text-navy-500">{cfg.blurb}</p>
+      <div className="mt-4 flex items-center justify-between text-sm font-semibold text-brand-700">
+        {state.status === "ready" ? `${state.plans.length} plans` : state.status === "error" ? "Compare" : <Skeleton className="h-5 w-16" />}
+        <ArrowRight size={16} className="transition group-hover:translate-x-1" />
+      </div>
+    </Link>
+  );
+}
+
 export default function LandingPage() {
-  const { state } = usePlans();
+  const { state } = useCategoryPlans("health");
   const insurerCount = state.status === "ready" ? new Set(state.plans.map((p) => p.insurerName)).size : undefined;
 
   return (
@@ -28,7 +44,7 @@ export default function LandingPage() {
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">Compare Health Insurance Plans</h1>
             <p className="mt-5 max-w-xl text-lg text-navy-200">Explore health insurance plans from multiple insurers in one place.</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to="/search" className="btn-primary !px-7 !py-3.5 text-base">Compare Health Plans <ArrowRight size={18} /></Link>
+              <Link to="/health/search" className="btn-primary !px-7 !py-3.5 text-base">Compare Health Plans <ArrowRight size={18} /></Link>
               <Link to="/assistance" className="btn border border-white/25 text-white hover:bg-white/10">Request assistance</Link>
             </div>
             <p className="mt-8 flex max-w-xl gap-2 text-xs leading-relaxed text-navy-300">
@@ -37,7 +53,7 @@ export default function LandingPage() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur sm:p-8">
-            <p className="text-sm font-semibold text-brand-100">Currently in the catalogue</p>
+            <p className="text-sm font-semibold text-brand-100">Currently in the health catalogue</p>
             <div className="mt-2 flex items-end gap-6">
               <div>
                 {state.status === "ready" ? <p className="text-5xl font-extrabold">{state.plans.length}</p> : <Skeleton className="h-12 w-16 !bg-white/10" />}
@@ -56,10 +72,20 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 sm:pt-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight">Compare more than health cover</h2>
+          <p className="mt-3 text-navy-500">Explore term life, motor and travel insurance from the same catalogue.</p>
+        </div>
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {categories.map((c) => <CategoryTile key={c.slug} cfg={c} />)}
+        </div>
+      </section>
+
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight">Everything you need to shortlist with confidence</h2>
-          <p className="mt-3 text-navy-500">A clear, side-by-side view of health plans, built to help you ask better questions.</p>
+          <p className="mt-3 text-navy-500">A clear, side-by-side view of plans, built to help you ask better questions.</p>
         </div>
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {pillars.map(({ icon: Icon, title, text }) => (
@@ -78,7 +104,7 @@ export default function LandingPage() {
             <h2 className="text-2xl font-bold">Ready to see the plans?</h2>
             <p className="mt-1 text-navy-600">Tell us a little about who needs cover and compare in seconds.</p>
           </div>
-          <Link to="/search" className="btn-primary shrink-0 !px-7">Compare Health Plans <ArrowRight size={16} /></Link>
+          <Link to="/health/search" className="btn-primary shrink-0 !px-7">Compare Health Plans <ArrowRight size={16} /></Link>
         </div>
       </section>
     </>

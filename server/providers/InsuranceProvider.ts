@@ -1,4 +1,4 @@
-import type { HealthPlan, Insurer, DebugReport } from "../../shared/types.js";
+import type { InsuranceCategory, InsurancePlan, Insurer, DebugReport } from "../../shared/types.js";
 
 export type ProviderErrorCode =
   | "UPSTREAM_UNAVAILABLE" | "UPSTREAM_ERROR" | "RATE_LIMITED" | "AUTH_FAILED" | "BAD_RESPONSE" | "NETWORK";
@@ -21,8 +21,8 @@ export class ProviderError extends Error {
  */
 export interface InsuranceProvider {
   readonly name: string;
-  getHealthPlans(): Promise<HealthPlan[]>;
-  getHealthInsurers(): Promise<Insurer[]>;
+  getPlans(category: InsuranceCategory): Promise<InsurancePlan[]>;
+  getInsurers(): Promise<Insurer[]>;
   /** Live, uncached probe used by /debug/api. Must never throw and never leak credentials. */
-  diagnose(): Promise<DebugReport>;
+  diagnose(category: InsuranceCategory): Promise<DebugReport>;
 }

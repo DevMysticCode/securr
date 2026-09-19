@@ -1,4 +1,4 @@
-import type { DebugReport, HealthPlansResponse, InsurersResponse } from "../../shared/types";
+import type { DebugReport, InsuranceCategory, InsurersResponse, PlansResponse } from "../../shared/types";
 
 export const UNAVAILABLE_MESSAGE = "Insurance data is temporarily unavailable. Please try again.";
 
@@ -27,7 +27,7 @@ async function get<T>(url: string): Promise<T> {
 }
 
 export const api = {
-  healthPlans: () => get<HealthPlansResponse>("/api/insurance/health-plans"),
+  plans: (category: InsuranceCategory) => get<PlansResponse>(`/api/insurance/plans?category=${category}`),
   insurers: () => get<InsurersResponse>("/api/insurance/insurers"),
-  debugReport: () => get<DebugReport>("/api/debug/health-plans"),
+  debugReport: (category: InsuranceCategory) => get<DebugReport>(`/api/debug/health-plans?category=${category}`),
 };

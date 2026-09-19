@@ -2,14 +2,18 @@
  * Provider-neutral domain model shared by backend and frontend.
  * Every field is optional unless the source always supplies it: we never fabricate values.
  */
-export interface HealthPlan {
+export const CATEGORIES = ["health", "term-life", "motor", "travel"] as const;
+export type InsuranceCategory = (typeof CATEGORIES)[number];
+
+export interface InsurancePlan {
   id: string;
+  category: InsuranceCategory;
   name: string;
   insurerName: string;
   insurerSlug?: string;
   planType?: string; // e.g. "individual", "family-floater"
   premium?: { min?: number; max?: number; assumptions?: string; verified?: boolean };
-  sumInsured?: { min?: number; max?: number; options?: number[] };
+  sumInsured?: { min?: number; max?: number; options?: number[]; currency?: string }; // currency only when the provider states it
   eligibility?: { minAge?: number; maxAge?: number; renewableUpTo?: string };
   claimSettlement?: unknown; // passed through as-is when present
   networkHospitals?: { count?: number; source?: string };
@@ -26,6 +30,7 @@ export interface Insurer {
   name: string;
   shortName?: string;
   type?: string;
+  categories: string[];
   headquarters?: string;
   established?: number;
   claimSettlementRatio?: { value?: number | null; year?: string; verified?: boolean };
@@ -41,7 +46,7 @@ export interface ProviderMeta {
   cached: boolean;
 }
 
-export interface HealthPlansResponse { plans: HealthPlan[]; total: number; meta: ProviderMeta }
+export interface PlansResponse { category: InsuranceCategory; plans: InsurancePlan[]; total: number; meta: ProviderMeta }
 export interface InsurersResponse { insurers: Insurer[]; total: number; meta: ProviderMeta }
 
 export interface ApiErrorBody {
@@ -53,6 +58,7 @@ export interface ApiErrorBody {
 
 export interface DebugReport {
   ok: boolean;
+  category: InsuranceCategory;
   provider: string;
   requestedAt: string;
   durationMs: number;

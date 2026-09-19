@@ -1,14 +1,21 @@
 import { useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
-import { usePlans } from "../features/health-comparison/PlansContext";
+import { CATEGORIES, type InsuranceCategory } from "../../shared/types";
+import { useCategoryPlans } from "../features/comparison/PlansContext";
+
+/** Names the plan the visitor came from. Only mounted when a plan is given, so no extra data is loaded otherwise. */
+function PlanNote({ category, id }: { category: InsuranceCategory; id: string }) {
+  const { state } = useCategoryPlans(category);
+  const plan = state.status === "ready" ? state.plans.find((p) => p.id === id) : undefined;
+  return plan ? <>Regarding <strong>{plan.name}</strong> by {plan.insurerName}.</> : <>An adviser can help you verify plan details before you decide.</>;
+}
 
 /** Placeholder for the future CRM lead capture. In this demo nothing is stored or sent. */
 export default function AssistancePage() {
   const [params] = useSearchParams();
-  const { state } = usePlans();
   const planId = params.get("plan");
-  const plan = state.status === "ready" ? state.plans.find((p) => p.id === planId) : undefined;
+  const cat = CATEGORIES.find((c) => c === params.get("category"));
   const [done, setDone] = useState(false);
 
   if (done) {
@@ -24,7 +31,7 @@ export default function AssistancePage() {
   return (
     <div className="mx-auto max-w-xl px-4 py-12 sm:py-16">
       <h1 className="text-3xl font-bold tracking-tight">Request assistance</h1>
-      <p className="mt-2 text-navy-500">{plan ? <>Regarding <strong>{plan.name}</strong> by {plan.insurerName}.</> : "An adviser can help you verify plan details before you decide."}</p>
+      <p className="mt-2 text-navy-500">{planId && cat ? <PlanNote category={cat} id={planId} /> : "An adviser can help you verify plan details before you decide."}</p>
       <form className="card mt-8 space-y-5 p-6 sm:p-8" onSubmit={(e: FormEvent) => { e.preventDefault(); setDone(true); }}>
         <div><label htmlFor="n" className="label">Full name</label><input id="n" required className="input" /></div>
         <div><label htmlFor="p" className="label">Phone</label><input id="p" type="tel" required className="input" /></div>

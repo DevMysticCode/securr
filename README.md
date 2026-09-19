@@ -1,7 +1,9 @@
 # Aivoryx Insurance — Health Insurance Comparison (Demo)
 
-React + TypeScript + Vite + Tailwind frontend, small Express backend proxy, real data from the
+React + TypeScript + Vite + Tailwind frontend, small backend proxy (Express locally, Vercel functions when deployed), real data from the
 [World Best Insurer demo API](https://worldbestinsurer.com/developers/). No mock data anywhere.
+
+Categories (India, `country=in`): **health, term-life, motor, travel**.
 
 ## Run
 ```
@@ -12,11 +14,13 @@ npm run dev               # frontend http://localhost:5173, backend http://local
 Production: `npm run build && npm start` (Express serves `dist/` and the API on one port, default 8787).
 
 ## Pages
-`/` landing · `/search` requirements form · `/plans` results (filters, sort, compare) · `/plans/:id` details ·
-`/compare` · `/insurers` · `/assistance` (demo form, nothing stored) · `/debug/api` (connection diagnostics)
+`/` landing · `/:category/search` requirements form · `/:category/plans` results (filters, sort, compare) · `/:category/plans/:id` details ·
+`/:category/compare` · `/insurers` · `/assistance` (demo form, nothing stored) · `/debug/api` (per-category connection diagnostics)
+(`:category` is one of `health`, `term-life`, `motor`, `travel`; old `/plans` style URLs redirect to `/health/...`)
 
 ## Notes
-* Demo key is limited to 100 requests/day; the backend caches for 10 minutes.
+* Demo key is limited to 100 requests/day; the backend caches for 1 hour locally and 6 hours at the Vercel edge.
+* Premiums are treated as INR (India catalogue; the API has no premium-currency field). Travel cover amounts are USD, as the API states; motor has no cover amounts.
 * The API does not return benefits detail, waiting periods, exclusions, claim settlement values, logos or
   insurer descriptions, so those show "Not provided" (or are hidden). Nothing is invented.
 * Premiums are the API's illustrative ranges (with its stated assumptions), not live quotes.

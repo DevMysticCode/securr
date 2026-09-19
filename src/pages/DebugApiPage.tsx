@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, RefreshCw, XCircle } from "lucide-react";
-import type { DebugReport } from "../../shared/types";
+import { CATEGORIES, type DebugReport, type InsuranceCategory } from "../../shared/types";
 import { api } from "../lib/api";
 import { Skeleton } from "../components/ui";
 
@@ -17,14 +17,15 @@ function Stat({ label, value }: { label: string; value: string | number | undefi
 
 export default function DebugApiPage() {
   const [s, setS] = useState<S>({ status: "loading" });
+  const [category, setCategory] = useState<InsuranceCategory>("health");
   const run = useCallback(() => {
     setS({ status: "loading" });
     const t0 = performance.now();
-    api.debugReport().then(
+    api.debugReport(category).then(
       (report) => setS({ status: "done", report, roundTripMs: Math.round(performance.now() - t0) }),
       () => setS({ status: "backend-down" }),
     );
-  }, []);
+  }, [category]);
   useEffect(run, [run]);
 
   return (
@@ -36,6 +37,11 @@ export default function DebugApiPage() {
         </div>
         <button onClick={run} className="btn-secondary shrink-0 !py-2"><RefreshCw size={16} /> Re-run</button>
       </div>
+      <label className="mt-5 flex items-center gap-2 text-sm text-navy-500">Category
+        <select className="input !w-auto !py-2" value={category} onChange={(e) => setCategory(e.target.value as InsuranceCategory)}>
+          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </label>
 
       {s.status === "loading" && <div className="mt-8 grid gap-4 sm:grid-cols-2"><Skeleton className="h-20" /><Skeleton className="h-20" /><Skeleton className="h-20" /><Skeleton className="h-20" /></div>}
 

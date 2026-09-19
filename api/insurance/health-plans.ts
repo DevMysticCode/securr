@@ -1,3 +1,4 @@
-import { plansPayload, serverlessJson } from "../../server/handlers.js";
+import { plansPayload, serverlessCategory } from "../../server/handlers.js";
 
-export const GET = () => serverlessJson(plansPayload, true);
+// Original health-only alias, kept for backwards compatibility.
+export const GET = (req: Request) => serverlessCategory(req, "health", plansPayload, true);
