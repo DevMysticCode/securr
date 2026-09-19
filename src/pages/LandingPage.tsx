@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, Check, Info, LayoutList, LifeBuoy, Scale } from "lucide-react";
-import { brand } from "../config/brand";
+import { ArrowRight, BookOpen, LayoutList, LifeBuoy, Scale } from "lucide-react";
 import { categories, type CategoryConfig } from "../config/categories";
 import { useCategoryPlans } from "../features/comparison/PlansContext";
 import { Skeleton } from "../components/ui";
+import HeroTabs from "./HeroTabs";
 
 const pillars = [
   { icon: Scale, title: "Compare multiple insurers", text: "See plans from different insurers side by side instead of visiting each website." },
@@ -11,8 +11,6 @@ const pillars = [
   { icon: BookOpen, title: "Understand benefits", text: "Read the highlighted features each insurer lists for its plan, with the source." },
   { icon: LifeBuoy, title: "Request assistance", text: "Talk to an adviser who can help you verify details before you decide." },
 ];
-
-const comparable = ["Illustrative premium range", "Sum insured options", "Network hospitals", "Entry age & renewability", "Plan highlights"];
 
 function CategoryTile({ cfg }: { cfg: CategoryConfig }) {
   const { state } = useCategoryPlans(cfg.slug);
@@ -30,47 +28,9 @@ function CategoryTile({ cfg }: { cfg: CategoryConfig }) {
 }
 
 export default function LandingPage() {
-  const { state } = useCategoryPlans("health");
-  const insurerCount = state.status === "ready" ? new Set(state.plans.map((p) => p.insurerName)).size : undefined;
-
   return (
     <>
-      <section className="relative overflow-hidden bg-navy-900 text-white">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-brand-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-80 w-80 rounded-full bg-brand-500/10 blur-3xl" />
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.3fr_1fr] lg:items-center">
-          <div>
-            <p className="mb-4 inline-block rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-100">Health insurance marketplace</p>
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">Compare Health Insurance Plans</h1>
-            <p className="mt-5 max-w-xl text-lg text-navy-200">Explore health insurance plans from multiple insurers in one place.</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to="/health/search" className="btn-primary !px-7 !py-3.5 text-base">Compare Health Plans <ArrowRight size={18} /></Link>
-              <Link to="/assistance" className="btn border border-white/25 text-white hover:bg-white/10">Request assistance</Link>
-            </div>
-            <p className="mt-8 flex max-w-xl gap-2 text-xs leading-relaxed text-navy-300">
-              <Info size={14} className="mt-0.5 shrink-0" /> {brand.disclaimer}
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur sm:p-8">
-            <p className="text-sm font-semibold text-brand-100">Currently in the health catalogue</p>
-            <div className="mt-2 flex items-end gap-6">
-              <div>
-                {state.status === "ready" ? <p className="text-5xl font-extrabold">{state.plans.length}</p> : <Skeleton className="h-12 w-16 !bg-white/10" />}
-                <p className="mt-1 text-sm text-navy-200">health plans</p>
-              </div>
-              <div>
-                {insurerCount != null ? <p className="text-5xl font-extrabold">{insurerCount}</p> : <Skeleton className="h-12 w-16 !bg-white/10" />}
-                <p className="mt-1 text-sm text-navy-200">insurers</p>
-              </div>
-            </div>
-            {state.status === "error" && <p className="mt-3 text-xs text-amber-300">{state.error.message}</p>}
-            <ul className="mt-6 space-y-2.5 border-t border-white/10 pt-6 text-sm text-navy-100">
-              {comparable.map((c) => <li key={c} className="flex items-center gap-2.5"><Check size={16} className="text-brand-500" /> {c}</li>)}
-            </ul>
-          </div>
-        </div>
-      </section>
+      <HeroTabs />
 
       <section className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 sm:pt-20">
         <div className="mx-auto max-w-2xl text-center">
